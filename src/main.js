@@ -185,9 +185,6 @@ colorPicker.addEventListener("input", (event) => {
 
 
 
-
-
-
 // raycaster
 const raycaster = new THREE.Raycaster();
 
@@ -216,6 +213,10 @@ function onMouseDown(event) {
 }
 
 function onMouseup(event) {
+  if(!fullScreen) {
+    openFullscreen()
+    fullScreen = true
+  }
   if(pressed){
     pressed = false;
     controls.enabled  = true;
@@ -224,7 +225,7 @@ function onMouseup(event) {
   }
   render();
 }
-
+let fullScreen = false
 function onMouseMove(event) {
   if(pressed) {
     const mouseX = (event.clientX / window.innerWidth) * 2 - 1 ;
@@ -281,6 +282,7 @@ window.addEventListener('resize', () => {
   render();
 });
 
+
 // resize window
 function resizeRendererToDisplaySize(renderer) {
   const canvas = renderer.domElement;
@@ -307,6 +309,18 @@ function addToGui(obj) {
   }
 }
 
+
+// fullscreen
+function openFullscreen() {
+  const elem = document.body
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    elem.msRequestFullscreen();
+  }
+}
 
 
 // show loaded objects tree in console
