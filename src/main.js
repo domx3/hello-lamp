@@ -16,6 +16,9 @@ const sizes = {
   width: window.innerWidth,
   height: window.innerHeight
 }
+let fullScreen = false
+// raycaster
+const raycaster = new THREE.Raycaster();
 
 // GUI
 const gui = new GUI();
@@ -30,18 +33,17 @@ const renderer = new THREE.WebGLRenderer({canvas, antialias: true, });
 renderer.useLegacyLights = false;
 renderer.shadowMap.enabled = true;
 
+
 // camera
 const camera = new THREE.PerspectiveCamera(45, 
   sizes.width/sizes.height, 0.1, 1000);
-camera.position.z = 0;
-camera.position.y = 2;
-camera.position.x = 0;
-camera.rotation.z = Math.PI/2;
+camera.position.set(-1, 3, 1.5);
+camera.position.set(-1.68, 2.69, 1.22);
+camera.rotation.set(-0.81, -0.76, -0.63);
 //camera.lookAt(new THREE.Vector3(0, 1.5, 0))
+camera.updateProjectionMatrix();
 addToGui('camera');
 scene.add(camera);
-
-
 
 
 // orbit controls
@@ -57,19 +59,20 @@ controls.minDistance = 0.3;
 controls.maxDistance = 2.45;
 controls.minPolarAngle = Math.PI / 10; 
 controls.maxPolarAngle = Math.PI / 2; 
+controls.update();
 //controls.minAzimuthAngle = Math.PI + 0.05; 
 //controls.maxAzimuthAngle = Math.PI * 2 - 0.05; 
 
-// render on demand
+// orbit controls render on demand
 controls.addEventListener('change', () => {
   render()
 });
 
 // point light
 const light = new THREE.PointLight("#ffffff");
-light.position.set(0, 1.5, 1);
+light.position.set(2.2, 1.5, 0);
 light.intensity = 2;
-light.distance = 2.3;
+light.distance = 0.3;
 light.decay = 1;
 scene.add(light)
 
@@ -90,9 +93,9 @@ spotLight.shadow.mapSize.height = 512*2; // default
 const helper = new THREE.SpotLightHelper(spotLight);
 //scene.add(helper)
 
+
 // gltf loader
 const loader = new GLTFLoader(setLoadManager());
-
 
 // glass material
 const glass_material = new THREE.MeshPhongMaterial({
@@ -130,7 +133,6 @@ loader.load('./objects/lamp.glb',
     bulb.material.emissive.set('#FFFF00');
     bulb.material.emissiveIntensity = 1;
 
-    console.log(spotLight)
     const newPosition = new THREE.Vector3(0, -1, 0);
     spotLight.target.position.copy(newPosition);
 
@@ -141,10 +143,11 @@ loader.load('./objects/lamp.glb',
 // load color panel
 loader.load('./objects/color_panel.glb',
   (gltf) => { 
-    colorButton = gltf.scene;
+    colorButton = gltf.scene.children[0];
     colorButton.name = 'colorButton';
     scene.add(colorButton);
     //console.log(dumpObject(colorButton).join('\n'));
+    render();
   },
 );
 
@@ -155,8 +158,7 @@ loader.load('./objects/room.glb',
     room.children[0].receiveShadow = true;
     scene.add(room);
     //console.log(dumpObject(room).join('\n'));
-    console.log(room)
-  }
+    }
 );
 
 // load chair
@@ -174,7 +176,6 @@ loader.load('./objects/chair.glb',
     scene.add(root);
     addToGui("chair");
     //console.log(dumpObject(chair).join('\n'));
-    console.log(chair)
   }
 );
 
@@ -189,17 +190,13 @@ colorPicker.addEventListener("input", (event) => {
 });
 
 
-// raycaster
-const raycaster = new THREE.Raycaster();
-
+//MOUSE DOWN
 function onMouseDown(event) {
   const mouse = new THREE.Vector2(
     (event.clientX / window.innerWidth) * 2 - 1,
     -(event.clientY / window.innerHeight) * 2 + 1
   );
-
   raycaster.setFromCamera(mouse, camera);
-
   // Find all intersecting objects
   const intersects = raycaster.intersectObjects(scene.children, true);
 
@@ -208,13 +205,14 @@ function onMouseDown(event) {
     if (intersects[0].object.parent.name === 'lamp_case') {
       pressed = true;
       controls.enabled = false;
-    } else if(intersects[0].object.parent.name === 'control_panel') {
-      //colorPicker.click();      
+    } else if(intersects[0].object.parent.name === 'colorButton') {
+      //colorPicker.click();
       colorPicker.showPicker();
     }
   }
 }
 
+// MOUSE UP
 function onMouseup(event) {
   if(!fullScreen) {
     //openFullscreen()
@@ -228,7 +226,8 @@ function onMouseup(event) {
   }
   render();
 }
-let fullScreen = false
+
+// MOUSE MOVE
 function onMouseMove(event) {
   if(pressed) {
     const mouseX = (event.clientX / window.innerWidth) * 2 - 1 ;
@@ -252,7 +251,9 @@ renderer.domElement.addEventListener('pointerup', onMouseup, false);
 renderer.domElement.addEventListener('pointermove', onMouseMove);
 
 
-// RENDER
+
+
+// --------------------------------------------------RENDER--------------------------------------------------------------
 const tempV = new THREE.Vector3();
 function render(time) {
   time *= 0.001;
@@ -265,15 +266,12 @@ function render(time) {
 
   // colorpicker position set
   if(colorButton) {
-    colorButton.updateWorldMatrix(true, false);
-    colorButton.getWorldPosition(tempV);
-    tempV.project(camera);
-    const x = (tempV.x *  .5 + .5) * canvas.clientWidth;
-    const y = (tempV.y * -.5 + .5) * canvas.clientHeight;
+    //colorButton.updateWorldMatrix(true, false);   
+    const {x,y} = getScreenCoordinates(colorButton);
     // move the elem to that position
-    colorPicker.style.translate = `${x-30}px ${y-40}px`;
+    colorPicker.style.translate = `${x}px ${y}px`;
   }
-  renderer.render(scene, camera);  
+  renderer.render(scene, camera);
   
   //requestAnimationFrame(render);
 }
@@ -284,6 +282,24 @@ render();
 window.addEventListener('resize', () => {
   render();
 });
+
+// --------------------------------------------------Functions--------------------------------------------------------------
+
+
+// Function to get window coordinates from 3D object
+const getScreenCoordinates = (object) => {
+  const vector = new THREE.Vector3();
+  vector.setFromMatrixPosition(object.matrixWorld);
+  vector.project(camera);
+
+  const widthHalf = window.innerWidth /2;
+  const heightHalf = window.innerHeight /2;
+
+  return {
+    x: (vector.x * widthHalf) + widthHalf,
+    y: -(vector.y * heightHalf) + heightHalf,
+  };
+};
 
 
 // resize window
@@ -351,6 +367,7 @@ function dumpObject(obj, lines = [], isLast = true, prefix = '') {
   return lines;
 }
 
+
 // load manager
 function setLoadManager() {
   const manager = new THREE.LoadingManager();
@@ -359,7 +376,6 @@ function setLoadManager() {
     //console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
     loading = true;
   };
-
   manager.onLoad = function ( ) {
     console.log( 'Loading complete!');
     const loadingScreen = document.getElementById( 'loadScreen' );	
@@ -367,11 +383,9 @@ function setLoadManager() {
     loading = false;
     render();
   };
-
   manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
     //console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
   };
-
   manager.onError = function ( url ) {
     console.log( 'There was an error loading ' + url );
   };

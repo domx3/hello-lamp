@@ -11,10 +11,10 @@ html, body {
 #colorpicker {
   z-index: 2;
   visibility: hidden;
-  position: absolute;
+  position: fixed;
   background-color: rgba(238, 234, 242, 0.138);
-  top: 30px;
-  left: 30px;
+  top: 0px;
+  left: 0px;
 }
 @media (orientation: portrait) {
   #colorpicker {
@@ -25,8 +25,9 @@ html, body {
     width: 60px;
     height: 60px;
     top: -0px;
-    left: -0px; */
+    left: -0px; 
     display: none;
+    */
   } 
 }
 
