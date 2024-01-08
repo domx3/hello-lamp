@@ -17,6 +17,10 @@ const sizes = {
   height: window.innerHeight
 }
 
+// GUI
+const gui = new GUI();
+//gui.close();
+
 // scene
 const scene = new THREE.Scene();
 
@@ -29,30 +33,32 @@ renderer.shadowMap.enabled = true;
 // camera
 const camera = new THREE.PerspectiveCamera(45, 
   sizes.width/sizes.height, 0.1, 1000);
-camera.position.z = 10;
-camera.position.y = 20;
-camera.position.x = -20;
+camera.position.z = 0;
+camera.position.y = 2;
+camera.position.x = 0;
+camera.rotation.z = Math.PI/2;
+//camera.lookAt(new THREE.Vector3(0, 1.5, 0))
+addToGui('camera');
 scene.add(camera);
 
-// GUI
-const gui = new GUI();
-gui.close();
+
 
 
 // orbit controls
 const controls = new OrbitControls(camera, canvas);
+controls.target = new THREE.Vector3(0, 1.4, 0);
 controls.enableDamping = false;
 controls.enablePan = false; 
 controls.enableZoom = true;
-controls.autoRotate = true;
+//controls.autoRotate = true;
 controls.autoRotateSpeed = 10;
 
-controls.minDistance = 5;
-controls.maxDistance = 35;
+controls.minDistance = 0.3;
+controls.maxDistance = 2.45;
 controls.minPolarAngle = Math.PI / 10; 
 controls.maxPolarAngle = Math.PI / 2; 
-controls.minAzimuthAngle = Math.PI + 0.05; 
-controls.maxAzimuthAngle = Math.PI * 2 - 0.05; 
+//controls.minAzimuthAngle = Math.PI + 0.05; 
+//controls.maxAzimuthAngle = Math.PI * 2 - 0.05; 
 
 // render on demand
 controls.addEventListener('change', () => {
@@ -61,27 +67,28 @@ controls.addEventListener('change', () => {
 
 // point light
 const light = new THREE.PointLight("#ffffff");
-light.position.set(-3, 0, -0.5);
-light.intensity = 20;
-light.distance = 4.3;
+light.position.set(0, 1.5, 1);
+light.intensity = 2;
+light.distance = 2.3;
 light.decay = 1;
 scene.add(light)
 
 // ambient light
 const light2 = new THREE.AmbientLight("#ffffff");
-light2.position.set(-3, 0, -0.5);
-light2.intensity = 0.5;
+light2.position.set(0, 0, 0);
+light2.intensity = 1.5;
 scene.add(light2)
 
 // spot light
-const spotLight = new THREE.SpotLight(0xffffff, 5000);
+const spotLight = new THREE.SpotLight(0xffffff, 50);
+spotLight.position.set(0,0,0);
 spotLight.angle = 0.5; // Set spotlight angle to 0.5 radians
 spotLight.penumbra = 0.1; // Set spotlight penumbra
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 512*2; // default
 spotLight.shadow.mapSize.height = 512*2; // default
 const helper = new THREE.SpotLightHelper(spotLight);
-
+//scene.add(helper)
 
 // gltf loader
 const loader = new GLTFLoader(setLoadManager());
@@ -104,72 +111,70 @@ const foil_material = new THREE.MeshStandardMaterial({
 });
 
 // load lamp
-loader.load('./objects/lamp.gltf',
+loader.load('./objects/lamp.glb',
   (gltf) => {
     const root = gltf.scene;
     scene.add(root);
     
     //console.log(dumpObject(root).join('\n'));
     
-    lamp_case = root.getObjectByName('case001');
+    lamp_case = root.getObjectByName('lamp_case');
     
-    glass = root.getObjectByName('glass001');
-    glass.material = glass_material;
+    glass = root.getObjectByName('lamp_glass');
+    glass.material = glass_material; 
     
-    foil = root.getObjectByName('inner_foil001');
+    foil = root.getObjectByName('lamp_foil');
     foil.material = foil_material;
 
-    bulb = root.getObjectByName('bulb001');
+    bulb = root.getObjectByName('lamp_bulb');
     bulb.material.emissive.set('#FFFF00');
     bulb.material.emissiveIntensity = 1;
 
-    const newPosition = new THREE.Vector3(-3, 5, -3);
+    console.log(spotLight)
+    const newPosition = new THREE.Vector3(0, -1, 0);
     spotLight.target.position.copy(newPosition);
 
     lamp_case.add(spotLight);
-    lamp_case.add(spotLight.target);
+    lamp_case.add(spotLight.target); 
  });
 
 // load color panel
-loader.load('./objects/color_panel.gltf',
+loader.load('./objects/color_panel.glb',
   (gltf) => { 
     colorButton = gltf.scene;
-    colorButton.position.set(0,-2,10)
-    colorButton.name = 'colorButton'
+    colorButton.name = 'colorButton';
     scene.add(colorButton);
     //console.log(dumpObject(colorButton).join('\n'));
   },
 );
 
 // load room
-loader.load('./objects/room/test.gltf',
+loader.load('./objects/room.glb',
   (gltf) => {
     const room = gltf.scene;
-    room.scale.set(5,5,5);
-    room.position.y = -12.5;
-    room.position.x = -24.75;
-    room.children[0].children[0].receiveShadow = true;
-    room.children[0].children[1].receiveShadow = true;
+    room.children[0].receiveShadow = true;
     scene.add(room);
     //console.log(dumpObject(room).join('\n'));
-
+    console.log(room)
   }
 );
 
 // load chair
-loader.load('./objects/chair/chair.glb',
+loader.load('./objects/chair.glb',
   (gltf) => {
-    chair = gltf.scene;
-    chair.scale.set(20,20,20)
-    chair.position.set(-9,-12,-30)
+    const root = gltf.scene;
+    chair = root.getObjectByName('chair')
+    const shadowCasters = [0,1,4,5,6]
+    shadowCasters.forEach((i) => chair.children[i].castShadow = true)
     chair.children[0].castShadow = true;
-    chair.children[0].children[0].castShadow = true;
-    chair.children[0].children[5].castShadow = true;
-    chair.children[0].children[6].castShadow = true;
-    chair.children[0].children[7].castShadow = true;
-    scene.add(chair);
+    chair.children[1].castShadow = true;
+    chair.children[4].castShadow = true;
+    chair.children[5].castShadow = true;
+    chair.children[6].castShadow = true;
+    scene.add(root);
     addToGui("chair");
     //console.log(dumpObject(chair).join('\n'));
+    console.log(chair)
   }
 );
 
@@ -182,7 +187,6 @@ colorPicker.addEventListener("input", (event) => {
   spotLight.color.set(color);
   render();
 });
-
 
 
 // raycaster
@@ -201,11 +205,10 @@ function onMouseDown(event) {
 
   if(intersects.length > 0) { 
     //console.log(intersects[0].object) 
-    if (intersects[0].object.parent.name === 'case001') {
+    if (intersects[0].object.parent.name === 'lamp_case') {
       pressed = true;
       controls.enabled = false;
     } else if(intersects[0].object.parent.name === 'control_panel') {
-      console.log("show picker")
       //colorPicker.click();      
       colorPicker.showPicker();
     }
@@ -214,7 +217,7 @@ function onMouseDown(event) {
 
 function onMouseup(event) {
   if(!fullScreen) {
-    openFullscreen()
+    //openFullscreen()
     fullScreen = true
   }
   if(pressed){
@@ -234,8 +237,8 @@ function onMouseMove(event) {
     mouseX_delta -= mouseX;
     mouseY_delta -= mouseY;
     
-    lamp_case.rotation.x = Math.max(Math.min(lamp_case.rotation.x + mouseY_delta * 5, Math.PI), -Math.PI);
-    lamp_case.rotation.y = Math.max(Math.min(lamp_case.rotation.y + mouseX_delta * 5, Math.PI), -Math.PI);
+    lamp_case.rotation.z = Math.max(Math.min(lamp_case.rotation.z + mouseY_delta * 5, Math.PI), -Math.PI);
+    lamp_case.rotation.x = Math.max(Math.min(lamp_case.rotation.x + mouseX_delta * 5, Math.PI), -Math.PI);
 
     mouseX_delta = mouseX;
     mouseY_delta = mouseY;
@@ -299,13 +302,25 @@ function resizeRendererToDisplaySize(renderer) {
 // dat.gui
 function addToGui(obj) {
   if(obj==='chair') {
-    const folderPos = gui.addFolder("position");
-    folderPos.add(chair.position, 'x', -35, -9).onChange(() => {render()});
-    folderPos.add(chair.position, 'z', -32, 16).onChange(() => {render()});
+    const folderPos = gui.addFolder("chair position");
+    folderPos.add(chair.position, 'x', -2, 2).onChange(() => {render()});
+    folderPos.add(chair.position, 'z', -2, 2).onChange(() => {render()});
     folderPos.open();
-    const folderRot = gui.addFolder("rotation");
+    const folderRot = gui.addFolder("chair rotation");
     folderRot.add(chair.rotation, 'y', -Math.PI * 2, Math.PI * 2).onChange(() => {render()});
     folderRot.open();
+/*     const folderLampRot = gui.addFolder("lamp rotation");
+    folderLampRot.add(lamp_case.rotation, 'x', -3, 3.14).onChange(() => {render()});
+    folderLampRot.add(lamp_case.rotation, 'y', -3.14, 3.14).onChange(() => {render()});
+    folderLampRot.add(lamp_case.rotation, 'z', -3, 3).onChange(() => {render()});
+    folderLampRot.open(); */
+  } else if(obj === 'camera') {
+    const folderFov = gui.addFolder("fov");
+    folderFov.add(camera, 'fov', 30, 85).onChange(() => {
+      camera.updateProjectionMatrix();
+      render();
+    });
+    folderFov.open();
   }
 }
 
@@ -326,7 +341,7 @@ function openFullscreen() {
 // show loaded objects tree in console
 function dumpObject(obj, lines = [], isLast = true, prefix = '') {
   const localPrefix = isLast ? '└─' : '├─';
-  lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}]`);
+  lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}][${obj.material ? obj.material.name : "*no-material*"}]`);
   const newPrefix = prefix + (isLast ? '  ' : '│ ');
   const lastNdx = obj.children.length - 1;
   obj.children.forEach((child, ndx) => {
@@ -346,7 +361,7 @@ function setLoadManager() {
   };
 
   manager.onLoad = function ( ) {
-    //console.log( 'Loading complete!');
+    console.log( 'Loading complete!');
     const loadingScreen = document.getElementById( 'loadScreen' );	
     loadingScreen.remove();
     loading = false;
