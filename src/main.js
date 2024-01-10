@@ -16,9 +16,18 @@ const sizes = {
   width: window.innerWidth,
   height: window.innerHeight
 }
-let fullScreen = false
+
 // raycaster
 const raycaster = new THREE.Raycaster();
+
+//loading svg
+const loadingScreen = document.getElementById( 'loadScreen' );	
+const svgPath = document.querySelector('#svg-path');
+const svgLength = svgPath.getTotalLength();
+console.log(svgLength)
+const svgShine = document.querySelector("#svg-shine");
+const clickSign = document.querySelector("#svg-click");
+
 
 // GUI
 const gui = new GUI();
@@ -32,6 +41,7 @@ const canvas = document.querySelector('#c');
 const renderer = new THREE.WebGLRenderer({canvas, antialias: true, });
 renderer.useLegacyLights = false;
 renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(window.devicePixelRatio);
 
 
 // camera
@@ -214,10 +224,6 @@ function onMouseDown(event) {
 
 // MOUSE UP
 function onMouseup(event) {
-  if(!fullScreen) {
-    //openFullscreen()
-    fullScreen = true
-  }
   if(pressed){
     pressed = false;
     controls.enabled  = true;
@@ -325,11 +331,10 @@ function addToGui(obj) {
     const folderRot = gui.addFolder("chair rotation");
     folderRot.add(chair.rotation, 'y', -Math.PI * 2, Math.PI * 2).onChange(() => {render()});
     folderRot.open();
-/*     const folderLampRot = gui.addFolder("lamp rotation");
-    folderLampRot.add(lamp_case.rotation, 'x', -3, 3.14).onChange(() => {render()});
-    folderLampRot.add(lamp_case.rotation, 'y', -3.14, 3.14).onChange(() => {render()});
-    folderLampRot.add(lamp_case.rotation, 'z', -3, 3).onChange(() => {render()});
-    folderLampRot.open(); */
+    // spotlight intensity
+    const folderLampRot = gui.addFolder("lamp intensity");
+    folderLampRot.add(spotLight, 'intensity', 0, 100).onChange(() => {render()});
+    folderLampRot.open();
   } else if(obj === 'camera') {
     const folderFov = gui.addFolder("fov");
     folderFov.add(camera, 'fov', 30, 85).onChange(() => {
@@ -368,23 +373,41 @@ function dumpObject(obj, lines = [], isLast = true, prefix = '') {
 }
 
 
+loadingScreen.addEventListener('click', (event) => {
+  if(!loading) {
+    loadingScreen.remove();
+    openFullscreen();
+  }
+  
+})
+
 // load manager
 function setLoadManager() {
   const manager = new THREE.LoadingManager();
 
   manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
-    //console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+    console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
     loading = true;
+    
   };
   manager.onLoad = function ( ) {
     console.log( 'Loading complete!');
-    const loadingScreen = document.getElementById( 'loadScreen' );	
-    loadingScreen.remove();
     loading = false;
+    svgPath.setAttribute('class',  "svg-path-forwards");
+    setTimeout(function() {
+      svgShine.setAttribute('class',  "svg-shine--show");
+    }, 300);
+    setTimeout(function() {
+      clickSign.setAttribute('class',  "click-show");
+    }, 1000);
     render();
+
   };
   manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
     //console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+    
+    
+
   };
   manager.onError = function ( url ) {
     console.log( 'There was an error loading ' + url );

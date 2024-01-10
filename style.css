@@ -86,12 +86,16 @@ html, body {
 
 .loading {
   display: flex;
+  flex-direction: column;
+  gap: 60px;
   width: 100%;
   height: 100%;
   position: absolute;
   justify-content: center;
   align-items: center;
-  background-color: rgb(119, 119, 119);
+  background-color: rgb(237, 214, 161);
+  z-index: 99 !important;
+  padding-bottom: 200px;
 }
 
 .loading img{
@@ -124,4 +128,121 @@ html, body {
 
 .show-instructions:hover .hover-image {
   visibility: visible;
+}
+
+
+#turnOnBtn {
+  border-radius: 20px;
+  background: #656757;
+  color: #fff;
+  box-shadow: 0 6px #050505;
+  -webkit-transition: none;
+  -moz-transition: none;
+  transition: none;
+  border: none;
+  cursor: pointer;
+  padding: 25px 80px;
+  display: inline-block;
+  margin: 15px 30px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  outline: none;
+  position: relative;
+}
+
+#turnOnBtn:hover {
+	box-shadow: 0 4px #050505;
+	top: 2px;
+}
+
+#turnOnBtn:active {
+	box-shadow: 0 0 #050505;
+	top: 6px;
+}
+
+.svg-shine--hide {
+  visibility: hidden;
+}
+.svg-shine--show {
+  visibility: visible;
+  animation: blink 0.8s infinite;
+}
+@keyframes blink {
+  100%,
+  0% {
+    fill: #fcf00000;
+  }
+  60% {
+    fill: #fbee00;
+  }
+}
+
+g rect {
+  animation: blink 0.8s infinite step-end;
+}
+
+ .svg-path--infinite{
+  stroke-dasharray: 290;
+  stroke-dashoffset: 290;
+  animation: dash 2s linear infinite;
+} 
+
+.svg-path--forwards{
+  stroke-dasharray: 290;
+  stroke-dashoffset: 290;
+  animation: dash 2s linear ;
+} 
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 290;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* .dg {
+ visibility: hidden;
+} */
+#click-me {
+  color: #232321;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+#svg-click {
+  height: 1.2em;
+}
+
+.click-hide {
+visibility: hidden;
+}
+.click-show {
+  visibility: visible;
+  animation: fadeIn 3s ease-in infinite;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translate3d(0, -200%, 0);
+	}
+	to {
+		opacity: 0.5;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+.loading-brand {
+  position: absolute;
+  font-family: 'Acme', sans-serif;
+  top: 0px;
+  left: 0px;
+  color: #3d3d2a;
+  text-decoration: none;
+  font-weight: bold;
+  align-self: start;
+  margin: 20px;
 }
