@@ -23,8 +23,8 @@ const raycaster = new THREE.Raycaster();
 //loading svg
 const loadingScreen = document.getElementById( 'loadScreen' );	
 const svgPath = document.querySelector('#svg-path');
-const svgLength = svgPath.getTotalLength();
-console.log(svgLength)
+/* const svgLength = svgPath.getTotalLength();
+console.log(svgLength) */
 const svgShine = document.querySelector("#svg-shine");
 const clickSign = document.querySelector("#svg-click");
 
@@ -386,12 +386,12 @@ function setLoadManager() {
   const manager = new THREE.LoadingManager();
 
   manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
-    console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+    //console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
     loading = true;
     
   };
   manager.onLoad = function ( ) {
-    console.log( 'Loading complete!');
+    //console.log( 'Loading complete!');
     loading = false;
     svgPath.setAttribute('class',  "svg-path-forwards");
     setTimeout(function() {
@@ -410,7 +410,7 @@ function setLoadManager() {
 
   };
   manager.onError = function ( url ) {
-    console.log( 'There was an error loading ' + url );
+    //console.log( 'There was an error loading ' + url );
   };
   
   return manager;
